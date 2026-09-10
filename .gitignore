@@ -18,9 +18,6 @@ nextstore/.env.local
 *.log
 .DS_Store
 
-# Duplicate recipe imports (canonical copy is at repo root)
-backend/.zerops-recipe/
-
 # IDE
 .idea/
 .vscode/

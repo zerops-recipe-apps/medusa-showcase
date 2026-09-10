@@ -7,11 +7,12 @@
   "private": true,
   "repository": {
     "type": "git",
-    "url": "https://github.com/zeropsio/recipe-medusa.git"
+    "url": "https://github.com/zerops-recipe-apps/medusa-showcase.git",
+    "directory": "backend"
   },
-  "homepage": "https://github.com/zeropsio/recipe-medusa",
+  "homepage": "https://github.com/zerops-recipe-apps/medusa-showcase",
   "bugs": {
-    "url": "https://github.com/zeropsio/recipe-medusa/issues"
+    "url": "https://github.com/zerops-recipe-apps/medusa-showcase/issues"
   },
   "keywords": [
     "medusa",

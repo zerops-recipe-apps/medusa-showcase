@@ -1,7 +1,7 @@
 # Zerops x Medusa Next.js storefront
 
 <!-- #ZEROPS_EXTRACT_START:intro# -->
-Official Medusa v2.19 Next.js 16 App Router storefront for the [recipe-medusa](https://github.com/zeropsio/recipe-medusa) backend. Runs as Node SSR on Zerops (port 8000) and talks to Medusa with `NEXT_PUBLIC_MEDUSA_BACKEND_URL` plus a publishable API key.
+Official Medusa v2.19 Next.js 16 App Router storefront for the [medusa-showcase](../) backend. Runs as Node SSR on Zerops (port 8000) and talks to Medusa with `NEXT_PUBLIC_MEDUSA_BACKEND_URL` plus a publishable API key.
 <!-- #ZEROPS_EXTRACT_END:intro# -->
 
 ## Local development

@@ -102,24 +102,27 @@ export default async function seedImages({ container }: ExecArgs) {
   async function seedImages(container: MedusaContainer) {
     const logger = container.resolve(ContainerRegistrationKeys.LOGGER);
 
+    const seedFile = (...segments: string[]) =>
+      path.join(__dirname, "seed-files", ...segments)
+
     const productImageMap = {
       [PRODUCTS.MedusaTShirt]: [
-        "/var/www/src/scripts/seed-files/tee-black-front.png",
-        "/var/www/src/scripts/seed-files/tee-black-back.png",
-        "/var/www/src/scripts/seed-files/tee-white-front.png",
-        "/var/www/src/scripts/seed-files/tee-white-back.png"
+        seedFile("tee-black-front.png"),
+        seedFile("tee-black-back.png"),
+        seedFile("tee-white-front.png"),
+        seedFile("tee-white-back.png"),
       ],
       [PRODUCTS.MedusaSweatshirt]: [
-        "/var/www/src/scripts/seed-files/sweatshirt-vintage-front.png",
-        "/var/www/src/scripts/seed-files/sweatshirt-vintage-back.png"
+        seedFile("sweatshirt-vintage-front.png"),
+        seedFile("sweatshirt-vintage-back.png"),
       ],
       [PRODUCTS.MedusaSweatpants]: [
-        "/var/www/src/scripts/seed-files/sweatpants-gray-front.png",
-        "/var/www/src/scripts/seed-files/sweatpants-gray-back.png"
+        seedFile("sweatpants-gray-front.png"),
+        seedFile("sweatpants-gray-back.png"),
       ],
       [PRODUCTS.MedusaShorts]: [
-        "/var/www/src/scripts/seed-files/shorts-vintage-front.png",
-        "/var/www/src/scripts/seed-files/shorts-vintage-back.png"
+        seedFile("shorts-vintage-front.png"),
+        seedFile("shorts-vintage-back.png"),
       ],
     };
 

@@ -4,9 +4,11 @@
 Medusa v2.19 commerce backend, admin, and Next.js 16 App Router storefront in one monorepo for [Zerops](https://zerops.io). PostgreSQL, Valkey, Meilisearch, and MinIO ship with the project; first deploy migrates, seeds B2C + B2B channels, and writes a publishable key the storefront reads at runtime.
 <!-- #ZEROPS_EXTRACT_END:intro# -->
 
-⬇️ **Full recipe page and deploy with one-click**
+⬇️ **Deploy on Zerops**
 
 [![Deploy on Zerops](https://github.com/zeropsio/recipe-shared-assets/blob/main/deploy-button/light/deploy-button.svg)](https://app.zerops.io/recipes/medusa?environment=small-production)
+
+Import YAMLs and environment docs live in the [Medusa recipe catalog](https://github.com/zeropsio/recipes/tree/main/medusa) (`zeropsio/recipes`) — not in this app repo.
 
 ## Repository layout
 
@@ -16,19 +18,6 @@ Medusa v2.19 commerce backend, admin, and Next.js 16 App Router storefront in on
 | [`nextstore/`](nextstore/) | Next.js SSR storefront (`zeropsSetup: nextstore`) | `8000` | Yarn 3 (Berry) |
 
 Root [`zerops.yml`](zerops.yml) defines both setups. Each Zerops service clones this repo and runs the matching setup (`buildCommands` use `cd backend` / `cd nextstore`).
-
-## Deploy to Zerops
-
-Paste an [`import.yaml`](.zerops-recipe/3%20—%20Stage/import.yaml) from [`.zerops-recipe/`](.zerops-recipe/) into the Zerops import dialog, or use the one-click buttons on the [Medusa recipe page](https://app.zerops.io/recipes/medusa). For a quick single-environment import, use [`.zerops-recipe/zerops-project-development-import.yml`](.zerops-recipe/zerops-project-development-import.yml) (Stage-like topology).
-
-- **AI agent** [[info]](.zerops-recipe/0%20—%20AI%20Agent) — [[deploy]](https://app.zerops.io/recipes/medusa?environment=ai-agent)
-- **Remote (CDE)** [[info]](.zerops-recipe/1%20—%20Remote%20(CDE)) — [[deploy]](https://app.zerops.io/recipes/medusa?environment=remote-cde)
-- **Local** [[info]](.zerops-recipe/2%20—%20Local) — [[deploy]](https://app.zerops.io/recipes/medusa?environment=local)
-- **Stage** [[info]](.zerops-recipe/3%20—%20Stage) — [[deploy]](https://app.zerops.io/recipes/medusa?environment=stage)
-- **Small Production** [[info]](.zerops-recipe/4%20—%20Small%20Production) — [[deploy]](https://app.zerops.io/recipes/medusa?environment=small-production)
-- **Highly-available Production** [[info]](.zerops-recipe/5%20—%20Highly-available%20Production) — [[deploy]](https://app.zerops.io/recipes/medusa?environment=highly-available-production)
-
-Canonical import copies live in [zeropsio/recipes/medusa](https://github.com/zeropsio/recipes/tree/main/medusa).
 
 ## Requirements
 
@@ -77,7 +66,7 @@ Deploy **medusa** before **nextstore** on first import (medusa has higher `prior
 
 ## Optional integrations
 
-SMTP, Stripe, Google/GitHub auth, PostHog, and Meilisearch search — see [`backend/README.md`](backend/README.md) and [`backend/.env.template`](backend/.env.template). Empty SMTP host logs email locally; empty Meilisearch host skips indexing.
+SMTP, Stripe, Google/GitHub auth, PostHog, and Meilisearch search — see [`backend/.env.template`](backend/.env.template). Empty SMTP host logs email locally; empty Meilisearch host skips indexing.
 
 Need help? Join the [Zerops Discord](https://discord.gg/zeropsio).
 
@@ -91,7 +80,7 @@ Need help? Join the [Zerops Discord](https://discord.gg/zeropsio).
 - **`medusa`** — builds in `backend/`, deploys `.medusa/server`, port 9000, init migrate/seed/publishable key/reload nextstore
 - **`nextstore`** — builds in `nextstore/` with Corepack + Yarn Berry, port 8000, readiness `/api/health`
 
-Both services use the same `buildFromGit: https://github.com/zerops-recipe-apps/medusa-showcase` URL; Zerops selects the setup via `zeropsSetup` in import.yaml.
+Both services use the same `buildFromGit: https://github.com/zerops-recipe-apps/medusa-showcase` URL; Zerops selects the setup via `zeropsSetup` in [import.yaml](https://github.com/zeropsio/recipes/tree/main/medusa).
 
 Map project value store keys in each setup (`APP_URL`, `API_URL`, `SEARCH_URL`) — never put framework keys on import **service** blocks.
 

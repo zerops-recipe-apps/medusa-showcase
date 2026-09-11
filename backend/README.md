@@ -4,38 +4,13 @@
 Medusa v2.19 commerce backend plus a Next.js App Router storefront on Zerops. The stack includes PostgreSQL, Valkey, Meilisearch, MinIO object storage, optional SMTP notifications, Stripe, Google/GitHub login, analytics, translations, draft orders, and seed data for both B2C and B2B (sales channels, customer groups, and a wholesale price list).
 <!-- #ZEROPS_EXTRACT_END:intro# -->
 
-## Deploy to Zerops
-
-You can either click the deploy button to deploy directly on Zerops, or manually copy an [`import.yaml`](.zerops-recipe/3%20—%20Stage/import.yaml) from [`.zerops-recipe/`](.zerops-recipe/) into the import dialog in the Zerops app. For a quick single-environment import, use [`.zerops-recipe/zerops-project-development-import.yml`](.zerops-recipe/zerops-project-development-import.yml) (same topology as Stage).
-
-[![Deploy on Zerops](https://github.com/zeropsio/recipe-shared-assets/blob/main/deploy-button/light/deploy-button.svg)](https://app.zerops.io/recipes/medusa?environment=small-production)
-
-Offered in examples for the whole development lifecycle — from environments for AI agents like [Claude Code](https://www.anthropic.com/claude-code) or [opencode](https://opencode.ai) through environments for remote (CDE) or local development of each developer to stage and productions of all sizes.
-
-- **AI agent** [[info]](.zerops-recipe/0%20—%20AI%20Agent) — [[deploy with one click]](https://app.zerops.io/recipes/medusa?environment=ai-agent)
-- **Remote (CDE)** [[info]](.zerops-recipe/1%20—%20Remote%20(CDE)) — [[deploy with one click]](https://app.zerops.io/recipes/medusa?environment=remote-cde)
-- **Local** [[info]](.zerops-recipe/2%20—%20Local) — [[deploy with one click]](https://app.zerops.io/recipes/medusa?environment=local)
-- **Stage** [[info]](.zerops-recipe/3%20—%20Stage) — [[deploy with one click]](https://app.zerops.io/recipes/medusa?environment=stage)
-- **Small Production** [[info]](.zerops-recipe/4%20—%20Small%20Production) — [[deploy with one click]](https://app.zerops.io/recipes/medusa?environment=small-production)
-- **Highly-available Production** [[info]](.zerops-recipe/5%20—%20Highly-available%20Production) — [[deploy with one click]](https://app.zerops.io/recipes/medusa?environment=highly-available-production)
-
-Each folder under [`.zerops-recipe/`](.zerops-recipe/) contains an `import.yaml` you can paste in the Zerops UI. Canonical copies also live in [zeropsio/recipes/medusa](https://github.com/zeropsio/recipes/tree/main/medusa).
+Deploy via the [Medusa recipe](https://app.zerops.io/recipes/medusa) — import YAMLs are in [`zeropsio/recipes/medusa`](https://github.com/zeropsio/recipes/tree/main/medusa). See the [monorepo README](../README.md).
 
 ## Requirements
 
 - Node.js `^20.19.0` or `>=22.12.0`
 - Yarn 1.22
 - PostgreSQL and Valkey (Redis-compatible) for local development
-
-## Repositories
-
-| Service | Repo | Port |
-| --- | --- | --- |
-| Medusa backend + admin | this repo | `9000` |
-| Next.js storefront | [zeropsio/recipe-medusa-nextstore](https://github.com/zeropsio/recipe-medusa-nextstore) | `8000` |
-| Analog.js storefront (optional) | separate recipe | — |
-
-The Analog.js storefront remains a [separate recipe](https://app.zerops.io/recipe/medusa-analog-devel).
 
 ## Local backend
 
@@ -63,7 +38,7 @@ Sign in with **email + password** (the default provider; Google/GitHub are optio
 | Email | `SUPERADMIN_EMAIL` — default `admin@example.com` |
 | Password | `SUPERADMIN_PASSWORD` |
 
-On Zerops those are **medusa service secrets**, not project env vars. Import sets the email to `admin@example.com` and generates the password (`s4lt_` plus a random suffix). In the Zerops UI: **medusa** service → environment / secrets → copy `SUPERADMIN_PASSWORD`. Locally they come from `.env` (template password is `supersecret`).
+On Zerops those are **medusa service secrets**, not project env vars. Import sets the email to `admin@example.com` and generates the password via `<@generateRandomString>`. In the Zerops UI: **medusa** service → environment / secrets → copy `SUPERADMIN_PASSWORD`. Locally they come from `.env` (template password is `supersecret`).
 
 After login:
 
@@ -119,7 +94,7 @@ Need help setting your project up? Join the [Zerops Discord community](https://d
 
 Place [`zerops.yml`](zerops.yml) at the repository root. Setup name `medusa` must match `zeropsSetup` in the import yaml.
 
-- Build: `nodejs@22`, Yarn 1, `yarn` then `yarn build`. Deploy `.medusa/server/~` plus `node_modules`.
+- Build: `nodejs@24`, Yarn 1, `yarn` then `yarn build`. Copy compiled `.medusa/server` into `backend/` and deploy that plus `node_modules` (do not use `backend/.medusa/server/~` — Zerops `~` flattens to `/var/www`, but init/start run from `backend/`).
 - Run: port `9000`, health `/health`. Map `APP_URL` → `STOREFRONT_URL` / CORS and `API_URL` → `BACKEND_URL` / `ADMIN_CORS`.
 - `initCommands` use `zsc execOnce`: migrate and sync-links per `${appVersionId}`; superadmin, seed, publishable key, and search index **once per service lifetime**.
 

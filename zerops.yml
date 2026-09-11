@@ -13,12 +13,16 @@ zerops:
       buildCommands:
         - cd backend && yarn
         - cd backend && yarn build
+        # `backend/.medusa/server/~` flattens to /var/www (Zerops `~` strips the
+        # prefix). init/start `cd backend`, so copy compiled output there instead.
+        - cd backend && cp -f .medusa/server/medusa-config.js . && cp -a .medusa/server/src/. src/ && cp -a .medusa/server/public public
       deployFiles:
-        - backend/.medusa/server/~
+        - backend/medusa-config.js
         - backend/tsconfig.json
         - backend/package.json
         - backend/node_modules
-        - backend/src/scripts/seed-files
+        - backend/src
+        - backend/public
       cache:
         - backend/node_modules
     deploy:

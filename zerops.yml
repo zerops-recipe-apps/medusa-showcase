@@ -13,16 +13,12 @@ zerops:
       buildCommands:
         - cd backend && yarn
         - cd backend && yarn build
-        # `backend/.medusa/server/~` flattens to /var/www (Zerops `~` strips the
-        # prefix). init/start `cd backend`, so copy compiled output there instead.
-        - cd backend && cp -f .medusa/server/medusa-config.js . && cp -a .medusa/server/src/. src/ && cp -a .medusa/server/public public
+        # Overlay recipe scripts + seed assets into the compiled tree (same
+        # /var/www layout as zeropsio/recipe-medusa; this repo is a monorepo).
+        - cd backend && cp -f package.json tsconfig.json .medusa/server/ && if [ -d src/scripts/seed-files ]; then mkdir -p .medusa/server/src/scripts && cp -a src/scripts/seed-files .medusa/server/src/scripts/; fi
       deployFiles:
-        - backend/medusa-config.js
-        - backend/tsconfig.json
-        - backend/package.json
-        - backend/node_modules
-        - backend/src
-        - backend/public
+        - backend/.medusa/server/~
+        - backend/~node_modules
       cache:
         - backend/node_modules
     deploy:
@@ -75,17 +71,17 @@ zerops:
         POSTHOG_HOST: ${POSTHOG_HOST}
         NEXTSTORE_RELOAD_SECRET: ${RELOAD_SECRET}
       initCommands:
-        - zsc execOnce ${appVersionId}_migration -- sh -c 'cd backend && yarn migrate'
-        - zsc execOnce ${appVersionId}_links -- sh -c 'cd backend && yarn syncLinks'
-        - zsc execOnce createInitialSuperadmin -- sh -c 'cd backend && yarn createInitialSuperadmin'
-        - zsc execOnce seedInitialData -- sh -c 'cd backend && yarn seedInitialData'
-        - sh -c 'cd backend && yarn setInitialPublishableKey'
-        - sh -c 'cd backend && yarn reloadNextstoreEnv'
-        - zsc execOnce addInitialSearchDocuments -- sh -c 'cd backend && yarn addInitialSearchDocuments'
+        - zsc execOnce ${appVersionId}_migration -- yarn migrate
+        - zsc execOnce ${appVersionId}_links -- yarn syncLinks
+        - zsc execOnce createInitialSuperadmin -- yarn createInitialSuperadmin
+        - zsc execOnce seedInitialData -- yarn seedInitialData
+        - yarn setInitialPublishableKey
+        - yarn reloadNextstoreEnv
+        - zsc execOnce addInitialSearchDocuments -- yarn addInitialSearchDocuments
       ports:
         - port: 9000
           httpSupport: true
-      start: sh -c 'cd backend && yarn start'
+      start: yarn start
       healthCheck:
         httpGet:
           port: 9000

@@ -94,7 +94,7 @@ Need help setting your project up? Join the [Zerops Discord community](https://d
 
 Place [`zerops.yml`](zerops.yml) at the repository root. Setup name `medusa` must match `zeropsSetup` in the import yaml.
 
-- Build: `nodejs@24`, Yarn 1, `yarn` then `yarn build`. Copy compiled `.medusa/server` into `backend/` and deploy that plus `node_modules` (do not use `backend/.medusa/server/~` — Zerops `~` flattens to `/var/www`, but init/start run from `backend/`).
+- Build: `nodejs@24`, Yarn 1, `yarn` then `yarn build`. Deploy `.medusa/server/~` plus `package.json` / `node_modules` to `/var/www` (same as [recipe-medusa](https://github.com/zeropsio/recipe-medusa); `backend/~…` strips the monorepo prefix). Init/start run from `/var/www`, not `cd backend`.
 - Run: port `9000`, health `/health`. Map `APP_URL` → `STOREFRONT_URL` / CORS and `API_URL` → `BACKEND_URL` / `ADMIN_CORS`.
 - `initCommands` use `zsc execOnce`: migrate and sync-links per `${appVersionId}`; superadmin, seed, publishable key, and search index **once per service lifetime**.
 

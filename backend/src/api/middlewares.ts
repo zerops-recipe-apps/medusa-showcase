@@ -27,11 +27,30 @@ const forceHttpsProtocol = (
   next()
 }
 
+/**
+ * `admin.path` stays `/app` (Medusa default). `path: "/"` is for a standalone
+ * admin host — here the SPA catch-all would also take `/health` and `/store`.
+ */
+const redirectRootToAdmin = (
+  req: MedusaRequest,
+  res: MedusaResponse,
+  next: MedusaNextFunction
+) => {
+  // Matcher `/*` makes req.path "/" for every request — use originalUrl.
+  const path = (req.originalUrl || "/").split("?")[0]
+  if (req.method === "GET" && path === "/") {
+    res.redirect(302, "/app")
+    return
+  }
+
+  next()
+}
+
 export default defineMiddlewares({
   routes: [
     {
       matcher: "/*",
-      middlewares: [forceHttpsProtocol],
+      middlewares: [redirectRootToAdmin, forceHttpsProtocol],
     },
   ],
 })

@@ -20,7 +20,7 @@ export default async function passwordResetHandler({
       config.admin.backendUrl && config.admin.backendUrl !== "/"
         ? config.admin.backendUrl
         : "http://localhost:9000"
-    const adminPath = config.admin.path || "/app"
+    const adminPath = (config.admin.path || "/app").replace(/\/$/, "")
     urlPrefix = `${backendUrl}${adminPath}`
   }
 

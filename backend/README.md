@@ -29,7 +29,7 @@ Medusa Admin lives at **`/app`** on port `9000` (the Store API is the same host 
 | Where | Open |
 | --- | --- |
 | Local | [http://localhost:9000/app](http://localhost:9000/app) |
-| Zerops | `{API_URL}/app` — on the **medusa** service, use the public subdomain (port 9000), then go to `/app`. Signed-out users land on `/app/login`. |
+| Zerops | `{API_URL}/app` — on the **medusa** service, use the public subdomain (port 9000). `{API_URL}/` redirects to `/app`. Signed-out users land on `/app/login`. |
 
 Sign in with **email + password** (the default provider; Google/GitHub are optional extras).
 

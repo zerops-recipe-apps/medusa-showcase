@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://api.app-prg1.zerops.io/api/rest/public/settings/zerops-yaml-json-schema.json
 #
 # Medusa API at repo root. Setups: `dev` and `prod` only.
-# Storefront: zerops-recipe-apps/medusa-showcase-nextstore.
+# Storefront: zerops-recipe-apps/medusa-showcase-frontend.
 
 zerops:
   - setup: prod

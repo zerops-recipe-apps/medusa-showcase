@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://api.app-prg1.zerops.io/api/rest/public/settings/zerops-yaml-json-schema.json
 #
-# Medusa showcase backend only. Setups: `dev` and `prod` only.
+# Medusa API at repo root. Setups: `dev` and `prod` only.
 # Storefront: zerops-recipe-apps/medusa-showcase-nextstore.
 
 zerops:
@@ -10,14 +10,14 @@ zerops:
         BACKEND_URL: ${API_URL}
       base: nodejs@24
       buildCommands:
-        - cd backend && yarn
-        - cd backend && yarn build
-        - cd backend && cp -f package.json tsconfig.json .medusa/server/ && if [ -d src/scripts/seed-files ]; then mkdir -p .medusa/server/src/scripts && cp -a src/scripts/seed-files .medusa/server/src/scripts/; fi
+        - yarn
+        - yarn build
+        - cp -f package.json tsconfig.json .medusa/server/ && if [ -d src/scripts/seed-files ]; then mkdir -p .medusa/server/src/scripts && cp -a src/scripts/seed-files .medusa/server/src/scripts/; fi
       deployFiles:
-        - backend/.medusa/server/~
-        - backend/~node_modules
+        - .medusa/server/~
+        - ~node_modules
       cache:
-        - backend/node_modules
+        - node_modules
     deploy:
       readinessCheck:
         httpGet:
@@ -50,8 +50,6 @@ zerops:
         MEILISEARCH_PRODUCT_INDEX_NAME: products
         GOOGLE_CALLBACK_URL: ${APP_URL}/auth/google/callback
         GITHUB_CALLBACK_URL: ${APP_URL}/auth/github/callback
-        NEXTSTORE_RELOAD_SECRET: ${RELOAD_SECRET}
-        NEXTSTORE_RELOAD_HOST: ${NEXTSTORE_HOST}
       initCommands:
         - zsc execOnce ${appVersionId}_migration -- yarn migrate
         - zsc execOnce ${appVersionId}_links -- yarn syncLinks
@@ -74,10 +72,10 @@ zerops:
       envVariables:
         BACKEND_URL: ${DEV_API_URL}
       buildCommands:
-        - cd backend && yarn
+        - yarn
       deployFiles: ./
       cache:
-        - backend/node_modules
+        - node_modules
     run:
       base: nodejs@24
       envVariables:

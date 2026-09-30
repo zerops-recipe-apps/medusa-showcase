@@ -51,6 +51,23 @@ zerops:
         MEILISEARCH_PRODUCT_INDEX_NAME: products
         GOOGLE_CALLBACK_URL: ${APP_URL}/auth/google/callback
         GITHUB_CALLBACK_URL: ${APP_URL}/auth/github/callback
+        JWT_SECRET: ${JWT_SECRET}
+        COOKIE_SECRET: ${COOKIE_SECRET}
+        RELOAD_SECRET: ${RELOAD_SECRET}
+        SMTP_HOST: ${SMTP_HOST}
+        SMTP_PORT: ${SMTP_PORT}
+        SMTP_USER: ${SMTP_USER}
+        SMTP_PASS: ${SMTP_PASS}
+        SMTP_FROM: ${SMTP_FROM}
+        SMTP_SECURE: ${SMTP_SECURE}
+        STRIPE_API_KEY: ${STRIPE_API_KEY}
+        STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+        GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+        GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+        GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
+        GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
+        POSTHOG_EVENTS_API_KEY: ${POSTHOG_EVENTS_API_KEY}
+        POSTHOG_HOST: ${POSTHOG_HOST}
       initCommands:
         - zsc execOnce ${appVersionId}_migration -- yarn migrate
         - zsc execOnce ${appVersionId}_links -- yarn syncLinks
@@ -62,6 +79,7 @@ zerops:
       ports:
         - port: 9000
           httpSupport: true
+      start: yarn start
       healthCheck:
         httpGet:
           port: 9000
@@ -113,6 +131,23 @@ zerops:
         MEILISEARCH_PRODUCT_INDEX_NAME: products
         GOOGLE_CALLBACK_URL: ${APP_URL}/auth/google/callback
         GITHUB_CALLBACK_URL: ${APP_URL}/auth/github/callback
+        JWT_SECRET: ${JWT_SECRET}
+        COOKIE_SECRET: ${COOKIE_SECRET}
+        RELOAD_SECRET: ${RELOAD_SECRET}
+        SMTP_HOST: ${SMTP_HOST}
+        SMTP_PORT: ${SMTP_PORT}
+        SMTP_USER: ${SMTP_USER}
+        SMTP_PASS: ${SMTP_PASS}
+        SMTP_FROM: ${SMTP_FROM}
+        SMTP_SECURE: ${SMTP_SECURE}
+        STRIPE_API_KEY: ${STRIPE_API_KEY}
+        STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+        GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+        GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+        GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
+        GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
+        POSTHOG_EVENTS_API_KEY: ${POSTHOG_EVENTS_API_KEY}
+        POSTHOG_HOST: ${POSTHOG_HOST}
       initCommands:
         - zsc execOnce ${appVersionId}_migration -- yarn migrate
         - zsc execOnce ${appVersionId}_links -- yarn syncLinks
@@ -124,6 +159,7 @@ zerops:
       ports:
         - port: 9000
           httpSupport: true
+      start: yarn start
       healthCheck:
         httpGet:
           port: 9000
@@ -166,6 +202,10 @@ zerops:
         MEILISEARCH_PRODUCT_INDEX_NAME: products
         GOOGLE_CALLBACK_URL: ${DEV_APP_URL}/auth/google/callback
         GITHUB_CALLBACK_URL: ${DEV_APP_URL}/auth/github/callback
+        JWT_SECRET: ${JWT_SECRET}
+        COOKIE_SECRET: ${COOKIE_SECRET}
+        RELOAD_SECRET: ${RELOAD_SECRET}
       ports:
         - port: 9000
           httpSupport: true
+      start: zsc noop --silent

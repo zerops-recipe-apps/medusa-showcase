@@ -251,7 +251,6 @@ module.exports = defineConfig({
   },
   featureFlags: {
     caching: true,
-    translation: true,
   },
   plugins: [
     {

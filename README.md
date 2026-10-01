@@ -61,6 +61,7 @@ zerops:
         - .medusa/server/~
         - ~node_modules
     run:
+      base: nodejs@24
       initCommands:
         - zsc execOnce ${appVersionId}_migration -- yarn migrate
         - yarn setInitialPublishableKey
@@ -69,9 +70,11 @@ zerops:
       ports:
         - port: 9000
           httpSupport: true
+      start: yarn start
 
   - setup: dev
     build:
+      base: nodejs@24
       deployFiles: ./
 ```
 

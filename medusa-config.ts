@@ -225,15 +225,13 @@ if (envEnabled(process.env.GITHUB_CLIENT_ID) && envEnabled(process.env.GITHUB_CL
   })
 }
 
-if (authProviders.length > 1) {
-  modules.push({
-    resolve: "@medusajs/medusa/auth",
-    dependencies: [Modules.CACHE, ContainerRegistrationKeys.LOGGER],
-    options: {
-      providers: authProviders,
-    },
-  })
-}
+modules.push({
+  resolve: "@medusajs/medusa/auth",
+  dependencies: [Modules.CACHE, ContainerRegistrationKeys.LOGGER],
+  options: {
+    providers: authProviders,
+  },
+})
 
 module.exports = defineConfig({
   admin: {

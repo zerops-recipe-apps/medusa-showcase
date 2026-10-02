@@ -73,7 +73,7 @@ zerops:
         - zsc execOnce ${appVersionId}_migration -- yarn migrate
         - zsc execOnce ${appVersionId}_links -- yarn syncLinks
         - zsc execOnce createInitialSuperadmin_v2 -- yarn createInitialSuperadmin
-        - zsc execOnce seedInitialData -- yarn seedInitialData
+        - zsc execOnce seedInitialCatalog_v2 -- yarn seedInitialData
         - yarn setInitialPublishableKey
         - yarn reloadNextstoreEnv
         - zsc execOnce addInitialSearchDocuments -- yarn addInitialSearchDocuments
@@ -153,7 +153,7 @@ zerops:
         - zsc execOnce ${appVersionId}_migration -- yarn migrate
         - zsc execOnce ${appVersionId}_links -- yarn syncLinks
         - zsc execOnce createInitialSuperadmin_v2 -- yarn createInitialSuperadmin
-        - zsc execOnce seedInitialData -- yarn seedInitialData
+        - zsc execOnce seedInitialCatalog_v2 -- yarn seedInitialData
         - yarn setInitialPublishableKey
         - yarn reloadNextstoreEnv
         - zsc execOnce addInitialSearchDocuments -- yarn addInitialSearchDocuments

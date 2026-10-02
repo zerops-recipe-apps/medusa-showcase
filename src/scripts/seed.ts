@@ -19,7 +19,6 @@ import {
   uploadFilesWorkflow,
 } from "@medusajs/medusa/core-flows";
 import {
-  CreateProductCollectionDTO,
   ExecArgs,
   FileDTO,
   MedusaContainer,
@@ -34,6 +33,49 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import mime from "mime";
 
+async function ensureLatestDropsCollection(
+  container: MedusaContainer,
+  productIds: string[]
+) {
+  const logger = container.resolve(ContainerRegistrationKeys.LOGGER);
+  const productModuleService = container.resolve(Modules.PRODUCT);
+  const existing = await productModuleService.listProductCollections({});
+  const latestDrops = existing.find(
+    (collection) => collection.handle === "latest-drops"
+  );
+
+  let collectionId = latestDrops?.id;
+
+  if (!collectionId) {
+    const { result: collections } = await createCollectionsWorkflow(
+      container
+    ).run({
+      input: {
+        collections: [
+          {
+            title: "Latest Drops",
+            handle: "latest-drops",
+          },
+        ],
+      },
+    });
+    collectionId = collections[0].id;
+  }
+
+  if (productIds.length) {
+    await batchLinkProductsToCollectionWorkflow(container).run({
+      input: {
+        id: collectionId,
+        add: productIds,
+      },
+    });
+  }
+
+  logger.info(
+    `Ensured collection Latest Drops (${collectionId}) with ${productIds.length} products`
+  );
+}
+
 export default async function seedDemoData({ container }: ExecArgs) {
   const logger = container.resolve(ContainerRegistrationKeys.LOGGER);
   const link = container.resolve(ContainerRegistrationKeys.LINK);
@@ -41,11 +83,21 @@ export default async function seedDemoData({ container }: ExecArgs) {
   const fulfillmentModuleService = container.resolve(Modules.FULFILLMENT);
   const salesChannelModuleService = container.resolve(Modules.SALES_CHANNEL);
   const storeModuleService = container.resolve(Modules.STORE);
+  const productModuleService = container.resolve(Modules.PRODUCT);
 
   const regionModuleService = container.resolve(Modules.REGION);
   const existingRegions = await regionModuleService.listRegions({});
-  if (existingRegions.length > 0) {
-    logger.info("Seed data already present, skipping.");
+  const existingProducts = await productModuleService.listProducts(
+    {},
+    { take: 50 }
+  );
+
+  if (existingProducts.length > 0) {
+    logger.info("Products already present; ensuring homepage collection.");
+    await ensureLatestDropsCollection(
+      container,
+      existingProducts.map((product) => product.id)
+    );
     return;
   }
 
@@ -110,6 +162,16 @@ export default async function seedDemoData({ container }: ExecArgs) {
       },
     },
   });
+  let stockLocation: { id: string } | undefined;
+
+  if (existingRegions.length > 0) {
+    logger.info("Infrastructure already present; seeding catalog only.");
+    const stockLocationModule = container.resolve(Modules.STOCK_LOCATION);
+    const locations = await stockLocationModule.listStockLocations({});
+    stockLocation = locations[0];
+  }
+
+  if (existingRegions.length === 0) {
   logger.info("Seeding region data...");
   const paymentProviders = ["pp_system_default"];
   if (process.env.STRIPE_API_KEY) {
@@ -161,7 +223,7 @@ export default async function seedDemoData({ container }: ExecArgs) {
       ],
     },
   });
-  const stockLocation = stockLocationResult[0];
+  stockLocation = stockLocationResult[0];
 
   await link.create({
     [Modules.STOCK_LOCATION]: {
@@ -348,33 +410,44 @@ export default async function seedDemoData({ container }: ExecArgs) {
     },
   });
   logger.info("Finished seeding publishable API key data.");
+  }
+
+  if (!stockLocation?.id) {
+    throw new Error(
+      "No stock location found. Catalog seed needs a warehouse for inventory."
+    );
+  }
 
   logger.info("Seeding product data...");
 
-  const { result: categoryResult } = await createProductCategoriesWorkflow(
-    container
-  ).run({
-    input: {
-      product_categories: [
-        {
-          name: "Shirts",
-          is_active: true,
+  const wantedCategories = [
+    { name: "Shirts", is_active: true },
+    { name: "Sweatshirts", is_active: true },
+    { name: "Pants", is_active: true },
+    { name: "Merch", is_active: true },
+  ];
+  let categoryResult = await productModuleService.listProductCategories({});
+  const missingCategories = wantedCategories.filter(
+    (wanted) => !categoryResult.some((category) => category.name === wanted.name)
+  );
+
+  if (missingCategories.length) {
+    const { result: createdCategories } =
+      await createProductCategoriesWorkflow(container).run({
+        input: {
+          product_categories: missingCategories,
         },
-        {
-          name: "Sweatshirts",
-          is_active: true,
-        },
-        {
-          name: "Pants",
-          is_active: true,
-        },
-        {
-          name: "Merch",
-          is_active: true,
-        },
-      ],
-    },
-  });
+      });
+    categoryResult = [...categoryResult, ...createdCategories];
+  }
+
+  const categoryId = (name: string) => {
+    const category = categoryResult.find((cat) => cat.name === name);
+    if (!category?.id) {
+      throw new Error(`Product category "${name}" was not seeded`);
+    }
+    return category.id;
+  };
 
   enum PRODUCTS {
     MedusaTShirt = "Medusa T-Shirt",
@@ -557,27 +630,31 @@ export default async function seedDemoData({ container }: ExecArgs) {
     }
   }
 
-  const images = await seedImages(container);
-  logger.info(
-    `Seeding completed successfully. Products: ${Object.keys(images).join(
-      ", "
-    )}`
-  );
+  let images: Record<string, FileDTO[]> = {};
+  try {
+    images = await seedImages(container);
+    logger.info(
+      `Image upload completed. Products: ${Object.keys(images).join(", ")}`
+    );
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.warn(
+      `Image upload failed (${errorMessage}). Creating products without images.`
+    );
+  }
 
   const { result: products } = await createProductsWorkflow(container).run({
     input: {
       products: [
         {
           title: "Medusa T-Shirt",
-          category_ids: [
-            categoryResult.find((cat) => cat.name === "Shirts").id,
-          ],
+          category_ids: [categoryId("Shirts")],
           description:
             "Reimagine the feeling of a classic T-shirt. With our cotton T-shirts, everyday essentials no longer have to be ordinary.",
           handle: "t-shirt",
           weight: 400,
           status: ProductStatus.PUBLISHED,
-          images: images[PRODUCTS.MedusaTShirt],
+          images: images[PRODUCTS.MedusaTShirt] ?? [],
           options: [
             {
               title: "Size",
@@ -745,15 +822,13 @@ export default async function seedDemoData({ container }: ExecArgs) {
         },
         {
           title: "Medusa Sweatshirt",
-          category_ids: [
-            categoryResult.find((cat) => cat.name === "Sweatshirts").id,
-          ],
+          category_ids: [categoryId("Sweatshirts")],
           description:
             "Reimagine the feeling of a classic sweatshirt. With our cotton sweatshirt, everyday essentials no longer have to be ordinary.",
           handle: "sweatshirt",
           weight: 400,
           status: ProductStatus.PUBLISHED,
-          images: images[PRODUCTS.MedusaSweatshirt],
+          images: images[PRODUCTS.MedusaSweatshirt] ?? [],
           options: [
             {
               title: "Size",
@@ -841,13 +916,13 @@ export default async function seedDemoData({ container }: ExecArgs) {
         },
         {
           title: "Medusa Sweatpants",
-          category_ids: [categoryResult.find((cat) => cat.name === "Pants").id],
+          category_ids: [categoryId("Pants")],
           description:
             "Reimagine the feeling of classic sweatpants. With our cotton sweatpants, everyday essentials no longer have to be ordinary.",
           handle: "sweatpants",
           weight: 400,
           status: ProductStatus.PUBLISHED,
-          images: images[PRODUCTS.MedusaSweatpants],
+          images: images[PRODUCTS.MedusaSweatpants] ?? [],
           options: [
             {
               title: "Size",
@@ -935,13 +1010,13 @@ export default async function seedDemoData({ container }: ExecArgs) {
         },
         {
           title: "Medusa Shorts",
-          category_ids: [categoryResult.find((cat) => cat.name === "Merch").id],
+          category_ids: [categoryId("Merch")],
           description:
             "Reimagine the feeling of classic shorts. With our cotton shorts, everyday essentials no longer have to be ordinary.",
           handle: "shorts",
           weight: 400,
           status: ProductStatus.PUBLISHED,
-          images: images[PRODUCTS.MedusaShorts],
+          images: images[PRODUCTS.MedusaShorts] ?? [],
           options: [
             {
               title: "Size",
@@ -1049,95 +1124,82 @@ export default async function seedDemoData({ container }: ExecArgs) {
     inventoryLevels.push(inventoryLevel);
   }
 
-  await createInventoryLevelsWorkflow(container).run({
-    input: {
-      inventory_levels: inventoryLevels,
-    },
-  });
-
-  logger.info("Finished seeding inventory levels data.");
-
-  logger.info("Create collection");
-  const collectionData: CreateProductCollectionDTO = {
-    title: "Latest Drops",
-    handle: "latest-drops",
-  };
-
-  const { result: collections } = await createCollectionsWorkflow(
-    container
-  ).run({
-    input: {
-      collections: [collectionData],
-    },
-  });
-
-  await batchLinkProductsToCollectionWorkflow(
-    container
-  ).run({
-    input: {
-      id: collections[0].id,
-      add: products.map((p) => p.id),
-    },
-  });
-
-  logger.info(
-    `Created collection: ${collections[0].title} with ${products.length} products`
-  );
-
-  logger.info("Seeding customer groups and wholesale pricing...");
-  const { result: customerGroups } = await createCustomerGroupsWorkflow(
-    container
-  ).run({
-    input: {
-      customersData: [
-        {
-          name: "Retail",
-          metadata: { channel: "b2c" },
-        },
-        {
-          name: "Wholesale",
-          metadata: { channel: "b2b" },
-        },
-      ],
-    },
-  });
-
-  const wholesaleGroup = customerGroups.find(
-    (group) => group.name === "Wholesale"
-  );
-
-  const wholesalePrices = products.flatMap((product) =>
-    (product.variants ?? []).flatMap((variant) =>
-      ((variant as { prices?: { amount: number; currency_code: string }[] }).prices ?? []).map(
-        (price) => ({
-          variant_id: variant.id,
-          currency_code: price.currency_code,
-          amount: Math.round(Number(price.amount) * 0.8),
-        })
-      )
-    )
-  );
-
-  if (wholesaleGroup && wholesalePrices.length) {
-    await createPriceListsWorkflow(container).run({
+  try {
+    await createInventoryLevelsWorkflow(container).run({
       input: {
-        price_lists_data: [
+        inventory_levels: inventoryLevels,
+      },
+    });
+    logger.info("Finished seeding inventory levels data.");
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.warn(`Inventory levels skipped (${errorMessage}).`);
+  }
+
+  await ensureLatestDropsCollection(
+    container,
+    products.map((product) => product.id)
+  );
+
+  try {
+    logger.info("Seeding customer groups and wholesale pricing...");
+    const { result: customerGroups } = await createCustomerGroupsWorkflow(
+      container
+    ).run({
+      input: {
+        customersData: [
           {
-            title: "Wholesale",
-            description:
-              "Negotiated B2B pricing for the Wholesale customer group.",
-            status: "active",
-            rules: {
-              customer_group_id: [wholesaleGroup.id],
-            },
-            prices: wholesalePrices,
+            name: "Retail",
+            metadata: { channel: "b2c" },
+          },
+          {
+            name: "Wholesale",
+            metadata: { channel: "b2b" },
           },
         ],
       },
     });
-  }
 
-  logger.info(
-    "Finished seeding B2B sales channel, customer groups, and wholesale price list."
-  );
+    const wholesaleGroup = customerGroups.find(
+      (group) => group.name === "Wholesale"
+    );
+
+    const wholesalePrices = products.flatMap((product) =>
+      (product.variants ?? []).flatMap((variant) =>
+        ((variant as { prices?: { amount: number; currency_code: string }[] }).prices ?? []).map(
+          (price) => ({
+            variant_id: variant.id,
+            currency_code: price.currency_code,
+            amount: Math.round(Number(price.amount) * 0.8),
+          })
+        )
+      )
+    );
+
+    if (wholesaleGroup && wholesalePrices.length) {
+      await createPriceListsWorkflow(container).run({
+        input: {
+          price_lists_data: [
+            {
+              title: "Wholesale",
+              description:
+                "Negotiated B2B pricing for the Wholesale customer group.",
+              status: "active",
+              rules: {
+                customer_group_id: [wholesaleGroup.id],
+              },
+              prices: wholesalePrices,
+            },
+          ],
+        },
+      });
+    }
+
+    logger.info(
+      "Finished seeding B2B sales channel, customer groups, and wholesale price list."
+    );
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.warn(`Customer groups / wholesale prices skipped (${errorMessage}).`);
+  }
 }

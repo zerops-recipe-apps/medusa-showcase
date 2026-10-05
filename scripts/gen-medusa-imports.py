@@ -278,7 +278,7 @@ def data_plane(kind: str) -> str:
 {mailpit}"""
 
 
-def apps(kind: str, git: str) -> str:
+def apps(kind: str, backend_git: str, frontend_git: str) -> str:
     ha = kind == "ha"
     medusa_min = """    verticalAutoscaling:
       minRam: 1
@@ -291,22 +291,22 @@ def apps(kind: str, git: str) -> str:
 
     if kind in ("agent", "remote"):
         return f"""
-  # Idle workspace — full repo, no start. SSH in and run `yarn dev`.
+  # Idle workspace — deploy `./`, SSH in and run `yarn dev`.
   - hostname: medusadev
     type: nodejs@24
-    priority: 5
-    zeropsSetup: medusa-dev
-    buildFromGit: {git}
+    priority: 6
+    zeropsSetup: dev
+    buildFromGit: {backend_git}
     enableSubdomainAccess: true
     verticalAutoscaling:
       minRam: 1
 
-  # Production Medusa + admin. Seeds project CHANNEL_PUBLISHABLE_KEY.
+  # Staged prod setup. Seeds project CHANNEL_PUBLISHABLE_KEY for nextstorestage.
   - hostname: medusastage
     type: nodejs@24
     priority: 6
-    zeropsSetup: medusa
-    buildFromGit: {git}
+    zeropsSetup: prod
+    buildFromGit: {backend_git}
     enableSubdomainAccess: true
     envIsolation: service service@nextstorestage service@nextstoredev
 {SUPERADMIN}
@@ -315,8 +315,8 @@ def apps(kind: str, git: str) -> str:
   - hostname: nextstoredev
     type: nodejs@24
     priority: 5
-    zeropsSetup: nextstore-dev
-    buildFromGit: {git}
+    zeropsSetup: dev
+    buildFromGit: {frontend_git}
     enableSubdomainAccess: true
     verticalAutoscaling:
       minRam: 1
@@ -324,8 +324,8 @@ def apps(kind: str, git: str) -> str:
   - hostname: nextstorestage
     type: nodejs@24
     priority: 5
-    zeropsSetup: nextstore
-    buildFromGit: {git}
+    zeropsSetup: prod
+    buildFromGit: {frontend_git}
     enableSubdomainAccess: true
 {next_min}
 """
@@ -341,8 +341,8 @@ def apps(kind: str, git: str) -> str:
 {floor_comment}  - hostname: medusa
     type: nodejs@24
     priority: 6
-    zeropsSetup: medusa
-    buildFromGit: {git}
+    zeropsSetup: prod
+    buildFromGit: {backend_git}
     enableSubdomainAccess: true
 {ha_medusa}    envIsolation: service service@nextstore
 {SUPERADMIN}
@@ -351,8 +351,8 @@ def apps(kind: str, git: str) -> str:
   - hostname: nextstore
     type: nodejs@24
     priority: 5
-    zeropsSetup: nextstore
-    buildFromGit: {git}
+    zeropsSetup: prod
+    buildFromGit: {frontend_git}
     enableSubdomainAccess: true
 {ha_next}{next_min}
 """
@@ -361,6 +361,7 @@ def apps(kind: str, git: str) -> str:
 SPECS = {
     "showcase": {
         "git": "https://github.com/zerops-recipe-apps/medusa-showcase",
+        "frontend_git": "https://github.com/zerops-recipe-apps/medusa-showcase-frontend",
         "names": {
             "agent": "medusa-showcase-agent",
             "remote": "medusa-showcase-remote",
@@ -382,6 +383,7 @@ SPECS = {
     },
     "b2b": {
         "git": "https://github.com/zerops-recipe-apps/medusa-b2b",
+        "frontend_git": "https://github.com/zerops-recipe-apps/medusa-b2b-frontend",
         "names": {
             "agent": "medusa-b2b-agent",
             "remote": "medusa-b2b-remote",
@@ -403,6 +405,7 @@ SPECS = {
     },
     "dtc": {
         "git": "https://github.com/zerops-recipe-apps/medusa-dtc",
+        "frontend_git": "https://github.com/zerops-recipe-apps/medusa-dtc-frontend",
         "names": {
             "agent": "medusa-dtc-agent",
             "remote": "medusa-dtc-remote",
@@ -434,7 +437,7 @@ def render(spec: dict, kind: str) -> str:
         + sensitive
         + "\n\nservices:\n"
         + data_plane(kind)
-        + apps(kind, spec["git"])
+        + apps(kind, spec["git"], spec["frontend_git"])
     )
 
 

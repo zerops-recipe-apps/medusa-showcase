@@ -15,11 +15,19 @@ function toSearchDocument(product: Record<string, any>) {
 }
 
 export default async function searchIndexScript({ container }: ExecArgs) {
+  let meilisearch: MeilisearchModuleService
+  try {
+    meilisearch = container.resolve(MEILISEARCH_MODULE)
+  } catch {
+    console.warn(
+      "addInitialSearchDocuments: Meilisearch module not loaded (search service or env missing); skipping."
+    )
+    return
+  }
+
   const productModuleService: IProductModuleService = container.resolve(
     Modules.PRODUCT
   )
-  const meilisearch: MeilisearchModuleService =
-    container.resolve(MEILISEARCH_MODULE)
 
   const products = await productModuleService.listProducts(
     {},

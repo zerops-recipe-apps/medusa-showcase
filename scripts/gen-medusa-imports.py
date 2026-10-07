@@ -351,7 +351,7 @@ def apps(kind: str, backend_git: str, frontend_git: str) -> str:
   - hostname: nextstore
     type: nodejs@24
     priority: 5
-    zeropsSetup: prod
+    zeropsSetup: nextstore
     buildFromGit: {frontend_git}
     enableSubdomainAccess: true
 {ha_next}{next_min}
